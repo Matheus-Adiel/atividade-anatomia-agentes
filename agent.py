@@ -177,6 +177,7 @@ def run_coding_agent_loop():
             "content": user_input.strip()
         })
         while True:
+            print("=" * 40)
             assistant_response = execute_llm_call(conversation)
             tool_invocations = extract_tool_invocations(assistant_response)
             if not tool_invocations:
@@ -186,10 +187,12 @@ def run_coding_agent_loop():
                     "content": assistant_response
                 })
                 break
+            else:
+                print(f"THOUGHT: {assistant_response}\n")
             for name, args in tool_invocations:
+                print(f"ACT: {name}, {args}\n")
                 tool = TOOL_REGISTRY[name]
                 resp = ""
-                print(name, args)
                 if name == "read_file":
                     resp = tool(args.get("filename", "."))
                 elif name == "list_files":
@@ -202,6 +205,10 @@ def run_coding_agent_loop():
                     "role": "user",
                     "content": f"tool_result({json.dumps(resp)})"
                 })
+                print(f"OBSERVATION: {resp}\n")
+
+        with open("conversation.json", "w", encoding="utf-8") as file:
+            json.dump(conversation, file, ensure_ascii=False, indent=4)
 
 
 if __name__ == "__main__":
